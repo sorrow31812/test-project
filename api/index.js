@@ -1,14 +1,12 @@
 // @create-index this file is created by create-index.js.
 import controllers from './controllers'
 import response from './response'
-import services from './services'
 
-export { controllers, response, services }
+export { controllers, response }
 
 const moduleList = {
   controllers,
-  response,
-  services
+  response
 }
 
 export default moduleList
