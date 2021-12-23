@@ -1,13 +1,8 @@
 const routes = {
-  // Test
+  // Test topic
   'get /topic1': 'topic1.check',
-  'get /topic2': 'topic2.check'
-
-  // 'post /signin/:type': {
-  //   controller: 'signin',
-  //   action: 'signin',
-  //   middleware: []
-  // }
+  'get /topic2': 'topic2.check',
+  'post /topic3': 'topic3.check'
 }
 
 export default routes

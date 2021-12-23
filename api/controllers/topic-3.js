@@ -1,10 +1,18 @@
 import _ from 'lodash'
 
-const verify = (cards) => {
+const verify = async (cards) => {
+  let eye = 0
+  let chow = []
   let groups = []
+  let compare = []
+  let message = 'ok'
+  let compareCard = []
   let group = { arr: [], count: 0 }
+  if (_.size(cards) < 17) return { eye, chow: [], hu: false, message: '手牌數量不對，相公。' }
+  cards = cards.sort((a, b) => { return Number(a) - Number(b) })
   for (let i = 0; i < cards.length; i++) {
     let card = cards[i]
+    if (Number(card) >= 34) return { eye, chow: [], hu: false, message: '請勿輸入花牌。' }
     let nextCard = cards[i + 1]
     let preCard = cards[i - 1]
     let eqNext = nextCard === card
@@ -14,6 +22,7 @@ const verify = (cards) => {
         group.arr[group.arr.length - 1] += 1
       } else {
         group.arr.push(1)
+        compareCard.push(card)
       }
       group.count += 1
     }
@@ -21,54 +30,63 @@ const verify = (cards) => {
     if ((card > 26 && !eqNext) || (nextCard - card > 1 && card < 27) || ((card + 1) % 9 === 0 && !eqNext) || !nextCard) {
       if (group.count > 0) {
         groups.push(_.cloneDeep(group))
+        compare.push(_.cloneDeep(compareCard))
         group.arr = []
         group.count = 0
+        compareCard = []
       }
     }
   }
-  console.log('group:', JSON.stringify(groups))
+
   // 算出有無胡牌
+  const len = groups.length
   let hu = true
   let pairCount = 0
-  let len = groups.length
   for (let i = 0; i < len; i++) {
-    let g = groups[i]
-    let { arr, count } = g
-    let arrLen = arr.length
+    const g = groups[i]
+    const c = compare[i]
+    const { arr, count } = g
+    const arrLen = arr.length
     if (count === 3 && arrLen !== 2) {
       // 順子或刻子，一定是三張一樣或三張不一樣
+      if (arrLen === 3) chow.push(c)
       continue
     } else if (count === 2 && arrLen === 1) {
       // pair，一定是兩張一樣
       pairCount += 1
+      eye = _.head(c)
     } else if (count === 1) {
       // 單隻
       pairCount += 1
-      if (arrLen === count) return false
+      if (arrLen === count) return { hu, eye, chow, message }
     } else if (count > 3) {
       // count > 3
-      let check3 = checkHu(arr, pairCount)
-      if (!check3.hu) check3 = checkHu(arr, pairCount, false, true)
-      if (!check3.hu) check3 = checkHu(arr, pairCount, true, false)
+      let check3 = checkHu(arr, c, pairCount)
+      if (!check3.hu) check3 = checkHu(arr, c, pairCount, false, true)
+      if (!check3.hu) check3 = checkHu(arr, c, pairCount, true, false)
       hu = check3.hu
+      eye = check3.eye
+      chow = _.concat(chow, check3.chow)
       pairCount = check3.pairC
     } else {
-      return false
+      return { hu, eye, chow, message }
     }
 
-    if (pairCount > 1 || !hu) return false
+    if (pairCount > 1 || !hu) return { hu, eye, chow, message }
   }
 
   // 沒有將牌
   if (pairCount !== 1) hu = false
-  return hu
+  return { hu, eye, chow, message }
 }
 
-const checkHu = (arr, pairCount, pairFirst = false, threeFirst = false) => {
+const checkHu = (arr, compareCard, pairCount, pairFirst = false, threeFirst = false) => {
+  const arrLen = arr.length
+  let eye = 0
+  let chow = []
   let huObj = {}
-  let arrLen = arr.length
   let gt4 = _.find(arr, e => e > 4)
-  if (gt4) return { hu: false, pairC: pairCount }
+  if (gt4) return { eye, chow, hu: false, pairC: pairCount }
   for (let i = 0; i < arrLen; i++) {
     let t = _.cloneDeep(arr)
     if (!t[i]) continue
@@ -76,6 +94,7 @@ const checkHu = (arr, pairCount, pairFirst = false, threeFirst = false) => {
     let idx = i + 1
     huObj = {}
     while (idx !== i) {
+      let chowSet = []
       let card = t[idx - 1]
       if (card >= 3 && threeFirst) card = t[idx - 1] = card - 3
       if (card > 0) {
@@ -83,6 +102,8 @@ const checkHu = (arr, pairCount, pairFirst = false, threeFirst = false) => {
           t[idx] -= 1
           t[idx - 2] -= 1
           card = t[idx - 1] = card - 1
+          chowSet.push(compareCard[idx - 2], compareCard[idx - 1], compareCard[idx])
+          chow.push(chowSet)
         }
       }
 
@@ -93,16 +114,18 @@ const checkHu = (arr, pairCount, pairFirst = false, threeFirst = false) => {
       }
     }
 
-    console.log(t)
     let zeroCount = 0
     let threeCount = 0
-    _.forEach(t, num => {
+    for (let i = 0, tLen = t.length; i < tLen; i++) {
+      const num = t[i]
+      const c = compareCard[i]
       switch (num) {
         case 0:
           zeroCount += 1
           break
         case 1:
-          return { hu: false, pairC }
+          pairC += 1
+          break
         case 3:
           threeCount += 1
           break
@@ -110,72 +133,37 @@ const checkHu = (arr, pairCount, pairFirst = false, threeFirst = false) => {
           threeCount += 1
           break
         default:
+          eye = c
           pairC += 1
           break
       }
-    })
+    }
 
-    // console.log(pairC, zeroCount, threeCount, arrLen)
     if (_.size(huObj) && !huObj.hu) continue
-
-    let huCount = zeroCount + threeCount + pairC
-    if (huCount === arrLen && pairC <= 1) return { hu: true, pairC: pairCount + pairC }
+    const huCount = zeroCount + threeCount + pairC
+    if (huCount === arrLen && pairC <= 1) return { eye, chow, hu: true, pairC: pairCount + pairC }
+    chow = []
   }
 
-  if (!_.size(huObj)) huObj = { hu: false, pairC: pairCount }
-  console.log(huObj)
+  if (!_.size(huObj)) huObj = { eye, chow, hu: false, pairC: pairCount }
   return huObj
 }
 
 export default {
-  /**
-   * 測試啦
-   * @param {*} req
-   * @param {*} res
-   */
   async check (req, res) {
     const { body } = req
     const { hands } = body
-
-    const huObj = verify(hands)
+    const huObj = await verify(hands)
     const result = {
-      status: 200,
-      message: 'ok',
-      result: huObj
+      hands,
+      ...huObj,
+      status: 200
     }
-
     return res.json(result)
   }
 }
-
-// const pai_cht = [
-//   '一萬','二萬','三萬','四萬','五萬','六萬','七萬','八萬','九萬', //0~8
-//   '一筒','二筒','三筒','四筒','五筒','六筒','七筒','八筒','九筒', //9~17
-//   '一條','二條','三條','四條','五條','六條','七條','八條','九條', //18~26
-//   '東風','南風','西風','北風','紅中','發財','白板', //27~33
-//   '春一', '夏二', '秋三', '冬四', '梅一', '蘭二', '菊三', '竹四' //34~41
-// ];
-
-// function check_胡牌(holds){
-//   let result = {
-//       "胡":false,
-//       "眼":-1,
-//       "吃":[],
-//       "輸入":[]
-//   };
-//   //enter code there
-
-//   return result;
-// }
-
-// console.log(JSON.stringify(check_胡牌([1,2,3,3])));
-// console.log(JSON.stringify(check_胡牌([3,1,1,1])));
-// console.log(JSON.stringify(check_胡牌([1,2,3,3,3])));
-// console.log(JSON.stringify(check_胡牌([3,3,1,2,3])));
-// console.log(JSON.stringify(check_胡牌([8,9,10,11,11])));
-// console.log(JSON.stringify(check_胡牌([17,18,19,11,11])));
-// console.log(JSON.stringify(check_胡牌([26,27,28,11,11])));
-// console.log(JSON.stringify(check_胡牌([0,1,1,2,2,2,3,3,4,4,5,6,32,32])));
-// console.log(JSON.stringify(check_胡牌([0,1,1,2,3,2,6,7,8,4,5,6,33,33])));
-// console.log(JSON.stringify(check_胡牌([9,10,11,12,13,14,15,16,17,34,34])));
-// console.log(JSON.stringify(check_胡牌([0,1,1,2,2,2,3,3,4,4,5,6,35,35])));
+// [0,1,1,1,1,2,2,2,3,3,4,4,5,6,5,6,7]
+// [0,1,1,2,2,2,3,3,4,4,5,6,32,32]
+// [0,1,1,2,2,2,3,3,4,4,5,6,7,7,35,35,35]
+// [0,1,1,2,3,2,6,7,8,4,5,6,23,23,23,33,33]
+// [9,10,11,12,13,14,14,14,15,16,17,18,19,20,31,31,31]
