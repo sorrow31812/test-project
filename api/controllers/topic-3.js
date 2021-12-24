@@ -149,10 +149,13 @@ const checkHu = (arr, compareCard, pairCount, pairFirst = false, threeFirst = fa
   return huObj
 }
 
+const sample = [9, 10, 11, 12, 13, 14, 14, 14, 15, 16, 17, 18, 19, 20, 31, 31, 31]
 export default {
   async check (req, res) {
     const { body } = req
-    const { hands } = body
+    let { hands } = body
+    if (!hands) hands = sample
+
     const huObj = await verify(hands)
     const result = {
       hands,

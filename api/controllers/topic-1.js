@@ -22,6 +22,9 @@ export default {
     let tempResult = 0
     let error = []
     let message = []
+    text.sort((a, b) => {
+      return Number(a.insert_id) - Number(b.insert_id)
+    })
     for (let i = 0, len = text.length; i < len; i++) {
       const record = text[i]
       const { orig, add, new: result } = record
