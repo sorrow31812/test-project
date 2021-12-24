@@ -41,8 +41,6 @@ Ans:
 3. "insert_id":"9455"這筆資料後的點數與前面對不上，理論上會有一張資料表示存使用者點數餘額，交易紀錄中的orig欄位便是參考那張資料表；因此可能要先去檢查玩家目前餘額對不對，再來決定這筆交易紀錄要怎麼處理。
 4. 在"insert_id":"680"和679順序不對，不過排序一下就沒事了
 
-**答案：https://keke-test.herokuapp.com/topic1**
-
 ---
 ### Topic 2
 牛肉麵有三張資料表分別儲存[帳號等級,對應等級發放的點數,自動發放的點數紀錄],但是他發現有客戶拿到的點數不正確,幫忙他找出是哪個客戶發生了問題?
@@ -52,8 +50,6 @@ Api_url : http://test.sub.sakawa.com.tw/api.php?r=test_account
 Api_url : http://test.sub.sakawa.com.tw/api.php?r=test_gift
 自動發放的點數紀錄
 Api_url : http://test.sub.sakawa.com.tw/api.php?r=test_gift_log
-
-**答案：https://keke-test.herokuapp.com/topic2**
 
 ---
 ### Topic 3
@@ -82,4 +78,3 @@ var pai_cht = [
     '春一', '夏二', '秋三', '冬四', '梅一', '蘭二', '菊三', '竹四' //34~41
 ];
 ```
-**答案：https://keke-test.herokuapp.com/topic3**
