@@ -32,7 +32,7 @@ export default {
       if (tempResult !== Number(orig)) {
         message.push(`前後交易紀錄數字對不上`)
         logger.error(message)
-        error.push(record)
+        error.push(text[i - 1], record)
       }
       if (!check) {
         message.push(`交易紀錄算錯`)
