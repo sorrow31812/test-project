@@ -1,18 +1,18 @@
 import _ from 'lodash'
 
 const verify = async (cards) => {
-  let eye = 0
+  let eye = -1
   let chow = []
   let groups = []
   let compare = []
   let message = 'ok'
   let compareCard = []
   let group = { arr: [], count: 0 }
-  if (_.size(cards) < 17) return { eye, chow: [], hu: false, message: '手牌數量不對，相公。' }
+  // if (_.size(cards) < 17) return { eye, chow: [], hu: false, message: '手牌數量不對，相公。' }
   cards = cards.sort((a, b) => { return Number(a) - Number(b) })
   for (let i = 0; i < cards.length; i++) {
     let card = cards[i]
-    if (Number(card) >= 34) return { eye, chow: [], hu: false, message: '請勿輸入花牌。' }
+    if (Number(card) >= 34) message = '請勿輸入花牌，花牌不能吃碰喔。'
     let nextCard = cards[i + 1]
     let preCard = cards[i - 1]
     let eqNext = nextCard === card
@@ -58,7 +58,7 @@ const verify = async (cards) => {
     } else if (count === 1) {
       // 單隻
       pairCount += 1
-      if (arrLen === count) return { hu, eye, chow, message }
+      if (arrLen === count) return { hu: false, eye: -1, chow, message }
     } else if (count > 3) {
       // count > 3
       let check3 = checkHu(arr, c, pairCount)
@@ -76,13 +76,16 @@ const verify = async (cards) => {
   }
 
   // 沒有將牌
-  if (pairCount !== 1) hu = false
+  if (pairCount !== 1) {
+    hu = false
+    eye = -1
+  }
   return { hu, eye, chow, message }
 }
 
 const checkHu = (arr, compareCard, pairCount, pairFirst = false, threeFirst = false) => {
   const arrLen = arr.length
-  let eye = 0
+  let eye = -1
   let chow = []
   let huObj = {}
   let gt4 = _.find(arr, e => e > 4)
@@ -124,8 +127,8 @@ const checkHu = (arr, compareCard, pairCount, pairFirst = false, threeFirst = fa
           zeroCount += 1
           break
         case 1:
-          pairC += 1
-          break
+          // pairC += 1
+          return { eye, chow, hu: false, pairC: pairCount + pairC }
         case 3:
           threeCount += 1
           break
