@@ -58,7 +58,7 @@ const verify = async (cards) => {
     } else if (count === 1) {
       // 單隻
       pairCount += 1
-      if (arrLen === count) return { hu: false, eye: -1, chow, message }
+      if (arrLen === count) return { hu: false, eye: -1, chow: [], message }
     } else if (count > 3) {
       // count > 3
       let check3 = checkHu(arr, c, pairCount)
@@ -128,7 +128,7 @@ const checkHu = (arr, compareCard, pairCount, pairFirst = false, threeFirst = fa
           break
         case 1:
           // pairC += 1
-          return { eye, chow, hu: false, pairC: pairCount + pairC }
+          return { eye: -1, chow: [], hu: false, pairC: pairCount + pairC }
         case 3:
           threeCount += 1
           break
@@ -148,7 +148,7 @@ const checkHu = (arr, compareCard, pairCount, pairFirst = false, threeFirst = fa
     chow = []
   }
 
-  if (!_.size(huObj)) huObj = { eye, chow, hu: false, pairC: pairCount }
+  if (!_.size(huObj)) huObj = { eye: -1, chow: [], hu: false, pairC: pairCount }
   return huObj
 }
 
